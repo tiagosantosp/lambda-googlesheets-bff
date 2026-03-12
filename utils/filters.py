@@ -15,10 +15,12 @@ def _parse_amount(value) -> float:
         return 0.0
 
     cleaned = re.sub(r"[^0-9,.\-]", "", text)
-    if "," in cleaned and "." in cleaned:
+    if re.search(r",\d{1,2}$", cleaned):
         cleaned = cleaned.replace(".", "").replace(",", ".")
-    elif "," in cleaned and "." not in cleaned:
-        cleaned = cleaned.replace(",", ".")
+    elif re.search(r"\.\d{1,2}$", cleaned):
+        cleaned = cleaned.replace(",", "")
+    else:
+        cleaned = cleaned.replace(".", "").replace(",", "")
 
     try:
         return float(cleaned)

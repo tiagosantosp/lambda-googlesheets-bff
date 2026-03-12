@@ -63,10 +63,14 @@ def _normalize_record(record: Dict[str, str]) -> Dict[str, str]:
     }
 
 
-def get_documents() -> List[Dict[str, str]]:
+def get_documents(force_refresh: bool = False) -> List[Dict[str, str]]:
     global _DOCUMENTS_CACHE, _CACHE_SHEET_ID
 
-    if _DOCUMENTS_CACHE is not None and _CACHE_SHEET_ID == GOOGLE_SHEET_ID:
+    if (
+        not force_refresh
+        and _DOCUMENTS_CACHE is not None
+        and _CACHE_SHEET_ID == GOOGLE_SHEET_ID
+    ):
         return _DOCUMENTS_CACHE
 
     sheet = _get_sheet()

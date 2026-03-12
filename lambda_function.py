@@ -41,13 +41,15 @@ def handler(event, context):  # noqa: ARG001 - AWS Lambda signature
     params = event.get("queryStringParameters") or {}
 
     try:
+        force_refresh = params.get("refresh") == "1"
+
         if path == "/documents":
-            documents = get_documents()
+            documents = get_documents(force_refresh=force_refresh)
             documents = apply_filters(documents, params)
             return _response(200, {"documents": documents})
 
         if path == "/stats":
-            documents = get_documents()
+            documents = get_documents(force_refresh=force_refresh)
             stats = build_stats(documents)
             return _response(200, stats)
 
