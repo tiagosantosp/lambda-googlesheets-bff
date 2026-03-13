@@ -76,7 +76,12 @@ def get_documents(force_refresh: bool = False) -> List[Dict[str, str]]:
     sheet = _get_sheet()
     worksheet = sheet.worksheet(GOOGLE_SHEET_NAME) if GOOGLE_SHEET_NAME else sheet.sheet1
 
-    records = worksheet.get_all_records()
+    # Preserve locale-formatted values like "145,00" by disabling numericising.
+    # Also request formatted values from the Sheets API.
+    records = worksheet.get_all_records(
+        numericise_ignore=["all"],
+        value_render_option="FORMATTED_VALUE",
+    )
     documents = [_normalize_record(record) for record in records]
 
     _DOCUMENTS_CACHE = documents
