@@ -1,0 +1,54 @@
+name: Deploy Lambda
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AWS_REGION: sa-east-1
+  FUNCTION_NAME: arn:aws:lambda:sa-east-1:123994746909:function:lambda-googlesheets-bff
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf package lambda.zip
+          mkdir -p package
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt -t package
+
+          cp lambda_function.py package/
+
+          if [ -d "services" ]; then cp -r services package/; fi
+          if [ -d "utils" ]; then cp -r utils package/; fi
+          if [ -d "config" ]; then cp -r config package/; fi
+
+          (cd package && zip -r ../lambda.zip .)
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || env.AWS_REGION }}
+
+      - name: Deploy to Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --zip-file "fileb://lambda.zip"
